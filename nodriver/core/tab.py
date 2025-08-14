@@ -1927,12 +1927,13 @@ class Tab(Connection):
 
     async def flash_point(self, x, y, duration=0.5, size=10):
         style = (
-            "position:absolute;z-index:99999999;padding:0;margin:0;"
+            "position:absolute;z-index:2147483647;padding:0;margin:0;"
             "left:{:.1f}px; top: {:.1f}px;"
-            "opacity:1;"
+            "translate:-50% -50%;"
+            "opacity:0;"
             "width:{:d}px;height:{:d}px;border-radius:50%;background:red;"
             "animation:show-pointer-ani {:.2f}s ease 1;"
-        ).format(x - 8, y - 8, size, size, duration)
+        ).format(x, y, size, size, duration)
         script = (
             """
                 var css = document.styleSheets[0];
