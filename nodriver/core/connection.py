@@ -78,7 +78,7 @@ class Transaction(asyncio.Future):
 
     id: int = None
 
-    def __init__(self, cdp_obj: Generator):
+        def __init__(self, cdp_obj: Generator):
         """
         :param cdp_obj:
         """
@@ -86,14 +86,17 @@ class Transaction(asyncio.Future):
         self.__cdp_obj__ = cdp_obj
         self.connection = None
 
-        self.method, *params = next(self.__cdp_obj__).values()
-        if params:
-            params = params.pop()
-        self.params = params
+        msg = next(self.__cdp_obj__)
+        self.method = msg.get("method", None)
+        self.session_id = msg.get("sessionId", None)
+        self.params = msg.get("params", {})
 
     @property
     def message(self):
-        return json.dumps({"method": self.method, "params": self.params, "id": self.id})
+        msg = {"method": self.method, "params": self.params, "id": self.id}
+        if self.session_id:
+            msg["sessionId"] = self.session_id
+        return json.dumps(msg)
 
     @property
     def has_exception(self):
