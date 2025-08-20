@@ -93,9 +93,10 @@ class Transaction(asyncio.Future):
 
     @property
     def message(self):
-        msg = {"method": self.method, "params": self.params, "id": self.id}
+        msg = {"method": self.method, "params": self.params}
         if self.session_id:
             msg["sessionId"] = self.session_id
+        msg["id"] = self.id
         return json.dumps(msg)
 
     @property
