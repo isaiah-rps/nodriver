@@ -78,7 +78,7 @@ class Transaction(asyncio.Future):
 
     id: int = None
 
-        def __init__(self, cdp_obj: Generator):
+    def __init__(self, cdp_obj: Generator):
         """
         :param cdp_obj:
         """
