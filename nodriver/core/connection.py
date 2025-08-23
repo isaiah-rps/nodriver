@@ -416,7 +416,16 @@ class Connection(metaclass=CantTouchThis):
             # we started with a copy of self.enabled_domains and removed a domain from this
             # temp variable when we registered it or saw handlers for it.
             # items still present at this point are unused and need removal
-            self.enabled_domains.remove(ed)
+            # NOTE: multiple concurrent calls to _register_handlers() (triggered by rapid
+            # successive send() invocations) can interleave and mutate self.enabled_domains.
+            # by the time we get here, another call may already have removed `ed`, causing
+            # ValueError: list.remove(x): x not in list. this defensive removal avoids the
+            # noisy exception while preserving intended semantics (domain already disabled).
+            try:
+                self.enabled_domains.remove(ed)
+            except ValueError:
+                # benign race condition; ignore
+                continue
 
     async def _listener(self):
         seen_one = False
