@@ -348,7 +348,7 @@ class Connection(metaclass=CantTouchThis):
         if self.websocket:
             self.enabled_domains.clear()
             await self.websocket.close()
-            logger.debug("\n❌ closed websocket connection to %s", self.websocket_url)
+            logger.debug("\nclosed websocket connection to %s", self.websocket_url)
 
     def __getattr__(self, item):
         """:meta private:"""
