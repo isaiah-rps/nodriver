@@ -119,9 +119,14 @@ class Transaction(asyncio.Future):
         :param response:
         :return:
         """
+        if self.done():
+            # avoid InvalidStateError when protocol races deliver a duplicate reply
+            # benign: we've already set a result/exception for this txn
+            return
         if "error" in response:
             # set exception and bail out
-            return self.set_exception(ProtocolException(response["error"]))
+            self.set_exception(ProtocolException(response["error"]))
+            return
         try:
             # try to parse the result according to the py cdp docs.
             self.__cdp_obj__.send(response["result"])
@@ -129,7 +134,12 @@ class Transaction(asyncio.Future):
             raise KeyError(f"key '{e.args}' not found in message: {response['result']}")
         except StopIteration as e:
             # exception value holds the parsed response
-            self.set_result(e.value)
+            if not self.done():
+                try:
+                    self.set_result(e.value)
+                except asyncio.InvalidStateError:
+                    # race: someone beat us to completing the future
+                    pass
 
     def __repr__(self):
         success = False if (self.done() and self.has_exception) else True
@@ -294,10 +304,13 @@ class Connection(metaclass=CantTouchThis):
         :type handler:
         """
         if handler:
-            for event, callbacks in self.handlers.items():
-                for cb in callbacks:
-                    if cb == self:
-                        self.handlers[event].remove(handler)
+            # remove only matching handler references from each event list
+            for event, callbacks in list(self.handlers.items()):
+                try:
+                    while handler in callbacks:
+                        callbacks.remove(handler)
+                except Exception:
+                    continue
 
         if not isinstance(event_type_or_domain, list):
             event_type_or_domain = [event_type_or_domain]
@@ -305,18 +318,23 @@ class Connection(metaclass=CantTouchThis):
         for evt_dom in event_type_or_domain:
             if isinstance(evt_dom, types.ModuleType):
                 for name, obj in inspect.getmembers_static(evt_dom):
-                    if name.isupper():
+                    if name.isupper() or not name or not name[0].isupper():
                         continue
-                    if not name[0].isupper():
+                    if type(obj) != type or inspect.isbuiltin(obj):
                         continue
-                    if type(obj) != type:
-                        continue
-                    if inspect.isbuiltin(obj):
-                        continue
-                    del self.handlers[obj]
+                    if handler:
+                        # we already removed specific callbacks above; keep container if others remain
+                        if obj in self.handlers and not self.handlers[obj]:
+                            self.handlers.pop(obj, None)
+                    else:
+                        self.handlers.pop(obj, None)
                 return
             else:
-                del self.handlers[evt_dom]
+                if handler:
+                    if evt_dom in self.handlers and not self.handlers[evt_dom]:
+                        self.handlers.pop(evt_dom, None)
+                else:
+                    self.handlers.pop(evt_dom, None)
 
     async def connect(self, **kw):
         """
