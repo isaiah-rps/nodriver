@@ -233,7 +233,11 @@ class Browser:
         asyncio.create_task(self.update_targets())
 
     async def get(
-        self, url="chrome://welcome", new_tab: bool = False, new_window: bool = False
+        self,
+        url: str = "chrome://welcome",
+        new_tab: bool = False,
+        new_window: bool = False,
+        browser_context_id: cdp.browser.BrowserContextID | None = None,
     ) -> tab.Tab:
         """top level get. utilizes the first tab to retrieve given url.
 
@@ -247,10 +251,13 @@ class Browser:
         :return: Page
         """
         if new_tab or new_window:
-            # creat new target using the browser session
+            # create new target using the browser session; optionally keep within context
             target_id = await self.connection.send(
                 cdp.target.create_target(
-                    url, new_window=new_window, enable_begin_frame_control=True
+                    url,
+                    new_window=new_window,
+                    enable_begin_frame_control=True,
+                    browser_context_id=browser_context_id if browser_context_id else None,
                 )
             )
             # get the connection matching the new target_id from our inventory
