@@ -449,7 +449,10 @@ class Tab(Connection):
         return items
 
     async def get(
-        self, url="chrome://welcome", new_tab: bool = False, new_window: bool = False
+        self,
+        url: str = "chrome://welcome",
+        new_tab: bool = False,
+        new_window: bool = False,
     ):
         """top level get. utilizes the first tab to retrieve given url.
 
@@ -470,7 +473,13 @@ class Tab(Connection):
             new_tab = True
 
         if new_tab:
-            return await self.browser.get(url, new_tab, new_window)
+            # pass browser_context_id so child tab stays in same context/window
+            ctx_id = None
+            try:
+                ctx_id = self.target.browser_context_id
+            except Exception:
+                ctx_id = None
+            return await self.browser.get(url, new_tab, new_window, browser_context_id=ctx_id)
         else:
             frame_id, loader_id, *_ = await self.send(cdp.page.navigate(url))
             await self
