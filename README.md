@@ -1,3 +1,16 @@
+# `twarped/nodriver`
+
+`ultrafunkamsterdam/nodriver` is architecturally missing these key **Chrome Devtools Protocol (CDP)** features:
+- `sessionId` support for sending CDP commands to a non-`Tab` session
+  - [feat: included `sessionId` in `tab.send()` transaction](https://github.com/twarped/nodriver/commit/bf1dfda6cb16a31d2fd302f370f130dda3a3413b)
+- `browserContextId` support for creating new `Target`'s designated to a certain browser context
+  - [feat: added `browser_context_id` support with tab and browser `get`](https://github.com/twarped/nodriver/commit/1dcb52e8063bad359a3f2978b83f44e20dfbca68)
+- not really "key" architecture issues here, but definitely nice to haves: 
+  - [fix(connection): patched race condition in `_register_handlers()`](https://github.com/twarped/nodriver/commit/fe0d05dcd6180e77350120479a3d073bf86cc9a8)
+  - [fix: ignore `InvalidStateError` if transaction is already finished](https://github.com/twarped/nodriver/commit/5fca5b4b22f37af47194b844d6e4d062be777a14)
+ 
+and some other not super important stuff
+
 NODRIVER
 =======================
 
