@@ -159,6 +159,7 @@ class Tab(Connection):
 
     browser: nodriver.core.browser.Browser
     _download_behavior: List[str] = None
+    url: str
 
     def __init__(
         self,
