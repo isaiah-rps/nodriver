@@ -4706,7 +4706,16 @@ class ProxyForwarder:
         tasks = self.pipe(remote_reader, writer, event), self.pipe(
             reader, remote_writer, event
         )
-        await asyncio.gather(*tasks)
+        try:
+            await asyncio.gather(*tasks)
+        except (ConnectionResetError, OSError):
+            # normal during shutdown / client disconnect
+            logger.debug("proxy forwarder connection reset (closing tunnel)")
+        except Exception:
+            logger.exception("unexpected error in proxy forwarder tunnel")
+        finally:
+            writer.close()
+            remote_writer.close()
 
     @staticmethod
     async def pipe(
@@ -4716,11 +4725,22 @@ class ProxyForwarder:
         while not event.is_set():
             try:
                 data = await asyncio.wait_for(reader.read(2**16), 1)
-                if not data:
+                if not data:  # eof
                     break
-                # simply forward
 
                 writer.write(data)
             except asyncio.TimeoutError:
                 continue
+            except (ConnectionResetError, OSError):
+                # peer closed abruptly (common during browser shutdown)
+                logger.debug("proxy pipe connection reset")
+                break
+            except Exception:
+                logger.exception("unexpected error in proxy pipe")
+                break
         event.set()
+        # attempt graceful close of writer
+        try:
+            writer.close()
+        except Exception:
+            logger.exception("failed closing writer")
