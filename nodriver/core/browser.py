@@ -321,6 +321,7 @@ class Browser:
         :return:
         :rtype:
         """
+        fw = None
         if proxy_server:
             fw = util.ProxyForwarder(proxy_server=proxy_server)
             proxy_server = fw.proxy_server
@@ -345,6 +346,7 @@ class Browser:
                 self.targets,
             )
         )
+        connection.proxy = fw
         return connection
 
     async def start(self=None) -> Browser:

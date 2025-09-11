@@ -78,7 +78,7 @@ class Transaction(asyncio.Future):
 
     id: int = None
 
-    def __init__(self, cdp_obj: Generator):
+    def __init__(self, cdp_obj: Generator, session_id: str = None):
         """
         :param cdp_obj:
         """
@@ -88,7 +88,7 @@ class Transaction(asyncio.Future):
 
         msg = next(self.__cdp_obj__)
         self.method = msg.get("method", None)
-        self.session_id = msg.get("sessionId", None)
+        self.session_id = session_id or msg.get("sessionId", None)
         self.params = msg.get("params", {})
 
     @property
@@ -524,13 +524,14 @@ class Connection(metaclass=CantTouchThis):
                         raise
 
     async def send(
-        self, cdp_obj: Generator[dict[str, Any], dict[str, Any], Any], _is_update=False
+        self, cdp_obj: Generator[dict[str, Any], dict[str, Any], Any], session_id: str = None, _is_update=False
     ) -> Any:
         """
         send a protocol command. the commands are made using any of the cdp.<domain>.<method>()'s
         and is used to send custom cdp commands as well.
 
         :param cdp_obj: the generator object created by a cdp method
+        :param session_id: the session ID to use for this command
 
         :param _is_update: internal flag
             prevents infinite loop by skipping the registeration of handlers
@@ -541,13 +542,13 @@ class Connection(metaclass=CantTouchThis):
             await self.connect()
         if not _is_update:
             await self._register_handlers()
-        tx = Transaction(cdp_obj)
+        tx = Transaction(cdp_obj, session_id)
         the_id = next(self.__count__)
         tx.id = the_id
         self.mapper[the_id] = tx
-        asyncio.create_task(self.websocket.send(tx.message))
+        await self.websocket.send(tx.message)
         return await tx
 
-    async def _send_oneshot(self, cdp_obj):
+    async def _send_oneshot(self, cdp_obj, session_id: str = None):
         """fire and forget , eg: send command without waiting for any response"""
-        return await self.send(cdp_obj, _is_update=True)
+        return await self.send(cdp_obj, session_id, _is_update=True)

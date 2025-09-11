@@ -160,6 +160,7 @@ class Tab(Connection):
     browser: nodriver.core.browser.Browser
     _download_behavior: List[str] = None
     url: str
+    proxy: Optional[util.ProxyForwarder] = None
 
     def __init__(
         self,
