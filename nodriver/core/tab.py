@@ -160,6 +160,7 @@ class Tab(Connection):
     browser: nodriver.core.browser.Browser
     _download_behavior: List[str] = None
     url: str
+    target_id: cdp.target.TargetID
     proxy: Optional[util.ProxyForwarder] = None
 
     def __init__(
