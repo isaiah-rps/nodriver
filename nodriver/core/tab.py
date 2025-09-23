@@ -1824,9 +1824,11 @@ class Tab(Connection):
         button: str = "left",
         buttons: typing.Optional[int] = 1,
         modifiers: typing.Optional[int] = 0,
+        click_count: int = 1,
         _until_event: typing.Optional[type] = None,
     ):
         """native click on position x,y
+        
         :param y:
         :type y:
         :param x:
@@ -1835,6 +1837,8 @@ class Tab(Connection):
         :param buttons: which button (default 1 = left)
         :param modifiers: *(Optional)* Bit field representing pressed modifier keys.
                 Alt=1, Ctrl=2, Meta/Command=4, Shift=8 (default: 0).
+        :param click_count: how many times to click
+                (single click, double click, triple click)
         :param _until_event: internal. event to wait for before returning
         :return:
         """
@@ -1847,7 +1851,7 @@ class Tab(Connection):
                 modifiers=modifiers,
                 button=cdp.input_.MouseButton(button),
                 buttons=buttons,
-                click_count=1,
+                click_count=click_count,
             )
         )
 
@@ -1859,7 +1863,7 @@ class Tab(Connection):
                 modifiers=modifiers,
                 button=cdp.input_.MouseButton(button),
                 buttons=buttons,
-                click_count=1,
+                click_count=click_count,
             )
         )
 
