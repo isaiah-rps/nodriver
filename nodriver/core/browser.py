@@ -347,11 +347,7 @@ class Browser:
         :return:
         :rtype:
         """
-<<<<<<< HEAD
         fw = None
-=======
-
->>>>>>> upstream/main
         if proxy_server:
             fw = util.ProxyForwarder(
                 proxy_server=proxy_server, ssl_context=proxy_ssl_context
