@@ -410,7 +410,7 @@ class Connection(metaclass=CantTouchThis):
                     enabled_domains.remove(domain_mod)
                 continue
             elif domain_mod not in self.enabled_domains:
-                if domain_mod in (cdp.target, cdp.storage):
+                if domain_mod in (cdp.target, cdp.storage, cdp.input_):
                     # by default enabled
                     continue
                 try:
@@ -429,7 +429,7 @@ class Connection(metaclass=CantTouchThis):
                         logger.debug("NOT GOOD", exc_info=True)
                         continue
                 finally:
-                    continue
+                    pass
         for ed in enabled_domains:
             # we started with a copy of self.enabled_domains and removed a domain from this
             # temp variable when we registered it or saw handlers for it.

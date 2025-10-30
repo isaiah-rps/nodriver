@@ -161,7 +161,13 @@ class Browser:
         :return:
         """
         try:
-            await asyncio.sleep(time)
+            await asyncio.wait(
+                [
+                    asyncio.create_task(self.update_targets()),
+                    asyncio.create_task(asyncio.sleep(time)),
+                ],
+                return_when=asyncio.ALL_COMPLETED,
+            )
         except asyncio.TimeoutError:
             pass
 
@@ -307,17 +313,20 @@ class Browser:
         proxy_server: str = None,
         proxy_bypass_list: List[str] = None,
         origins_with_universal_network_access: List[str] = None,
+        proxy_ssl_context=None,
     ) -> tab.Tab:
         """
         creates a new browser context - mostly useful if you want to use proxies for different browser instances
         since chrome usually can only use 1 proxy per browser.
         socks5 with authentication is supported by using a forwarder proxy, the
         correct string to use socks proxy with username/password auth is socks://USERNAME:PASSWORD@SERVER:PORT
+        http/https proxies with authentication are also supported: http://USERNAME:PASSWORD@SERVER:PORT
 
         dispose_on_detach – (EXPERIMENTAL) (Optional) If specified, disposes this context when debugging session disconnects.
         proxy_server – (EXPERIMENTAL) (Optional) Proxy server, similar to the one passed to –proxy-server
         proxy_bypass_list – (EXPERIMENTAL) (Optional) Proxy bypass list, similar to the one passed to –proxy-bypass-list
         origins_with_universal_network_access – (EXPERIMENTAL) (Optional) An optional list of origins to grant unlimited cross-origin access to. Parts of the URL other than those constituting origin are ignored.
+        proxy_ssl_context – (Optional) Custom SSL context for HTTPS proxy connections. If None, a default context is used.
 
         :param new_window:
         :type new_window:
@@ -333,12 +342,20 @@ class Browser:
         :type proxy_bypass_list:
         :param origins_with_universal_network_access:
         :type origins_with_universal_network_access:
+        :param proxy_ssl_context:
+        :type proxy_ssl_context: ssl.SSLContext
         :return:
         :rtype:
         """
+<<<<<<< HEAD
         fw = None
+=======
+
+>>>>>>> upstream/main
         if proxy_server:
-            fw = util.ProxyForwarder(proxy_server=proxy_server)
+            fw = util.ProxyForwarder(
+                proxy_server=proxy_server, ssl_context=proxy_ssl_context
+            )
             proxy_server = fw.proxy_server
 
         ctx: cdp.browser.BrowserContextID = await self.connection.send(
@@ -478,11 +495,7 @@ class Browser:
             await self.connection.send(cdp.target.set_discover_targets(discover=True))
 
         await self.update_targets()
-
-        # await self
-
-        # self.connection.handlers[cdp.inspector.Detached] = [self.stop]
-        # return self
+        await self
 
     async def grant_all_permissions(self):
         """
@@ -583,7 +596,6 @@ class Browser:
         return info
 
     async def update_targets(self):
-
         targets: List[cdp.target.TargetInfo]
         targets = await self._get_targets()
         target_ids = [t.target_id for t in targets]
@@ -608,13 +620,6 @@ class Browser:
                 )
 
         await asyncio.sleep(0)
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if exc_type and exc_val:
-            raise exc_type(exc_val)
 
     def __iter__(self):
         self._i = self.tabs.index(self.main_tab)
@@ -955,6 +960,53 @@ class HTTPApi:
             None, lambda: urllib.request.urlopen(request, timeout=10)
         )
         return json.loads(response.read())
+
+
+class BrowserContext:
+    def __init__(
+        self,
+        config: Config = None,
+        *,
+        user_data_dir: PathLike = None,
+        headless: bool = False,
+        browser_executable_path: PathLike = None,
+        browser_args: List[str] = None,
+        sandbox: bool = True,
+        host: str = None,
+        port: int = None,
+        keep_open: bool = False,
+        **kwargs,
+    ):
+        self._config = config
+        self._user_data_dir = user_data_dir
+        self._headless = headless
+        self._browser_executable_path = browser_executable_path
+        self._browser_args = browser_args
+        self._sandbox = sandbox
+        self._host = host
+        self._port = port
+        self._kwargs = kwargs
+        self._instance: Browser = None
+        self._keep_open = keep_open
+
+    async def __aenter__(self):
+        if not self._instance:
+            self._instance = await Browser.create(
+                self._config,
+                user_data_dir=self._user_data_dir,
+                headless=self._headless,
+                browser_executable_path=self._browser_executable_path,
+                browser_args=self._browser_args,
+                sandbox=self._sandbox,
+                host=self._host,
+                port=self._port,
+                **self._kwargs,
+            )
+        return self._instance
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if not self._keep_open:
+            await util.deconstruct_browser(self._instance)
 
 
 atexit.register(util.deconstruct_browser)
