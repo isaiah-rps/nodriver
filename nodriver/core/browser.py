@@ -23,7 +23,7 @@ from .. import cdp
 from . import tab, util
 from ._contradict import ContraDict
 from .config import Config, PathLike, is_posix
-from .connection import Connection
+from .connection import Connection, ProtocolException
 
 logger = logging.getLogger(__name__)
 
@@ -252,14 +252,29 @@ class Browser:
         """
         if new_tab or new_window:
             # create new target using the browser session; optionally keep within context
-            target_id = await self.connection.send(
-                cdp.target.create_target(
-                    url,
-                    new_window=new_window,
-                    enable_begin_frame_control=True,
-                    browser_context_id=browser_context_id if browser_context_id else None,
+            try:
+                target_id = await self.connection.send(
+                    cdp.target.create_target(
+                        url,
+                        new_window=new_window,
+                        enable_begin_frame_control=True,
+                        browser_context_id=browser_context_id if browser_context_id else None,
+                    )
                 )
-            )
+            except ProtocolException as e:
+                if "-32000" in str(e):  # "Failed to open new tab"
+                    # likely that "--no-startup-window" was passed on create()
+                    target_id = await self.connection.send(
+                        cdp.target.create_target(
+                            url,
+                            new_window=new_window,
+                            enable_begin_frame_control=True,
+                            # so try using the main tab's browser_context_id
+                            browser_context_id=self.main_tab._target.browser_context_id,
+                        )
+                    )
+                else:
+                    raise
             # get the connection matching the new target_id from our inventory
             connection: tab.Tab = next(
                 filter(
