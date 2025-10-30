@@ -8,6 +8,7 @@
 - not really "key" architecture issues here, but definitely nice to haves: 
   - [fix(connection): patched race condition in `_register_handlers()`](https://github.com/twarped/nodriver/commit/fe0d05dcd6180e77350120479a3d073bf86cc9a8)
   - [fix: ignore `InvalidStateError` if transaction is already finished](https://github.com/twarped/nodriver/commit/5fca5b4b22f37af47194b844d6e4d062be777a14)
+  - [fix: added fallback to `Browser.get()`](https://github.com/twarped/nodriver/commit/b45b615dc64e6b9943937156f272447a2560529d)
  
 and some other not super important stuff
 
