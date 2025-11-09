@@ -431,7 +431,7 @@ class Browser:
             except (Exception,):
                 if _ == 4:
                     logger.debug("could not start", exc_info=True)
-                await self.sleep(0.5)
+                await asyncio.sleep(0.5)
             else:
                 break
 

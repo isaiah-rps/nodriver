@@ -253,7 +253,7 @@ def filter_recurse(doc: T, predicate: Callable[[cdp.dom.Node, Element], bool]) -
 
 
 def flatten_frame_tree(
-    tree: Union[cdp.page.FrameResourceTree, cdp.page.FrameTree]
+    tree: Union[cdp.page.FrameResourceTree, cdp.page.FrameTree],
 ) -> Generator[cdp.page.Frame, None, None]:
     yield tree.frame
     if tree.child_frames:
