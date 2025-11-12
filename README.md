@@ -8,7 +8,13 @@
 - not really "key" architecture issues here, but definitely nice to haves: 
   - [fix(connection): patched race condition in `_register_handlers()`](https://github.com/twarped/nodriver/commit/fe0d05dcd6180e77350120479a3d073bf86cc9a8)
   - [fix: ignore `InvalidStateError` if transaction is already finished](https://github.com/twarped/nodriver/commit/5fca5b4b22f37af47194b844d6e4d062be777a14)
+  - [feat: added `url` attribute to `Tab` class](https://github.com/twarped/nodriver/commit/4c2ddd4d36b7f8cf7ce52c3ff9c9bb666652c02f)
+  - [feat: patched `ConnectionResetError` and `OSError` on `browser.stop()` when using proxies](https://github.com/twarped/nodriver/commit/83b52121ce086c9804352bf60cf4f39fe82cfc4d)
+  - [feat: exposed `ProxyForwarder` on `Tab` and added `session_id` support to `Transaction` creation](https://github.com/twarped/nodriver/commit/590f6d4ef2e7559549d3c559307d7ebf3367720a)
+  - [feat: added `target_id` to `Tab` class](https://github.com/twarped/nodriver/commit/54c8a4efc7e8c8fe8e1b024dd8c7acc0380cd2bf)
+  - [feat: added `click_count` parameter to `mouse_click` method](https://github.com/twarped/nodriver/commit/7de1838bef020cc3a3fa51ceab9ea9c3ac0720ab)
   - [fix: added fallback to `Browser.get()`](https://github.com/twarped/nodriver/commit/b45b615dc64e6b9943937156f272447a2560529d)
+  - [fix: handle `ConnectionClosed` in `update_targets()`](https://github.com/twarped/nodriver/commit/3b708b7ded2572211212f46d82226fad3defca30)
  
 and some other not super important stuff
 
