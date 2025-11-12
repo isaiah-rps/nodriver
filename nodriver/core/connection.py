@@ -546,7 +546,11 @@ class Connection(metaclass=CantTouchThis):
         the_id = next(self.__count__)
         tx.id = the_id
         self.mapper[the_id] = tx
-        await self.websocket.send(tx.message)
+        try:
+            await self.websocket.send(tx.message)
+        except (websockets.ConnectionClosed, websockets.ConnectionClosedError):
+            logger.debug("websocket closed during send, ignoring")
+            return None
         return await tx
 
     async def _send_oneshot(self, cdp_obj, session_id: str = None):

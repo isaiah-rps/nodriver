@@ -594,6 +594,9 @@ class Browser:
     async def update_targets(self):
         targets: List[cdp.target.TargetInfo]
         targets = await self._get_targets()
+        if targets is None:
+            logger.debug("update_targets received None, connection likely closing")
+            return
         target_ids = [t.target_id for t in targets]
         existing_target_ids = [t.target_id for t in self.targets]
         for t in targets:
