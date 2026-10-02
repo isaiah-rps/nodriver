@@ -131,7 +131,10 @@ class Transaction(asyncio.Future):
             # try to parse the result according to the py cdp docs.
             self.__cdp_obj__.send(response["result"])
         except KeyError as e:
-            raise KeyError(f"key '{e.args}' not found in message: {response['result']}")
+            # Complete the transaction so a parser mismatch cannot strand its
+            # caller or terminate the listener. Do not include response values
+            # in errors: cookie responses can contain authentication material.
+            self.set_exception(KeyError(f"CDP response is missing field {e.args!r}"))
         except StopIteration as e:
             # exception value holds the parsed response
             if not self.done():
@@ -140,6 +143,8 @@ class Transaction(asyncio.Future):
                 except asyncio.InvalidStateError:
                     # race: someone beat us to completing the future
                     pass
+        except Exception as e:
+            self.set_exception(e)
 
     def __repr__(self):
         success = False if (self.done() and self.has_exception) else True

@@ -1410,7 +1410,8 @@ class Cookie:
             secure=bool(json['secure']),
             session=bool(json['session']),
             priority=CookiePriority.from_json(json['priority']),
-            same_party=bool(json['sameParty']),
+            # Current Chrome no longer reports the deprecated SameParty field.
+            same_party=bool(json.get('sameParty', False)),
             source_scheme=CookieSourceScheme.from_json(json['sourceScheme']),
             source_port=int(json['sourcePort']),
             expires=float(json['expires']) if json.get('expires', None) is not None else None,
@@ -2332,7 +2333,12 @@ class ClientSecurityState:
         return cls(
             initiator_is_secure_context=bool(json['initiatorIsSecureContext']),
             initiator_ip_address_space=IPAddressSpace.from_json(json['initiatorIPAddressSpace']),
-            private_network_request_policy=PrivateNetworkRequestPolicy.from_json(json['privateNetworkRequestPolicy']),
+            # Retain the Python API while accepting Chrome's renamed wire field.
+            private_network_request_policy=PrivateNetworkRequestPolicy.from_json(
+                json['privateNetworkRequestPolicy']
+                if 'privateNetworkRequestPolicy' in json
+                else json['localNetworkAccessRequestPolicy']
+            ),
         )
 
 
